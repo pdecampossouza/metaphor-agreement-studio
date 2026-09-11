@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a research-software improvement
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: research_need
+    attributes:
+      label: Research need
+      description: What research task or limitation motivates this change?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What should the software do?
+    validations:
+      required: true
+  - type: textarea
+    id: methodology
+    attributes:
+      label: Methodological notes
+      description: Include references or assumptions if the request changes statistical interpretation.

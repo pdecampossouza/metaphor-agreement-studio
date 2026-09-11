@@ -1,0 +1,70 @@
+[project]
+name = "metaphor-agreement-studio"
+version = "1.0.0"
+description = "Local-first research environment for reproducible inter-rater lexical metaphor analysis"
+readme = "README.md"
+license = "MIT"
+authors = [
+  { name = "Paulo Vitor Campos Souza" },
+]
+keywords = [
+  "metaphor annotation",
+  "inter-rater agreement",
+  "MIPVU",
+  "reproducible research",
+  "research software",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+]
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "streamlit>=1.46,<2",
+  "pandas>=2.2,<3",
+  "openpyxl>=3.1,<4",
+  "numpy>=2,<3",
+  "scipy>=1.15,<2",
+  "statsmodels>=0.14,<1",
+  "scikit-learn>=1.6,<2",
+  "plotly>=6,<7",
+  "matplotlib>=3.10,<4",
+  "jinja2>=3.1,<4",
+  "reportlab>=4.2,<5",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8,<10",
+  "pytest-cov>=6,<8",
+  "ruff>=0.12,<1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[project.urls]
+Homepage = "https://github.com/pdecampossouza/metaphor-agreement-studio"
+Repository = "https://github.com/pdecampossouza/metaphor-agreement-studio"
+Issues = "https://github.com/pdecampossouza/metaphor-agreement-studio/issues"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

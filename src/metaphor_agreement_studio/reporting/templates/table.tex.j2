@@ -1,0 +1,13 @@
+\begin{table}[ht]
+\centering
+\caption{ {{- caption -}} }
+\begin{tabular}{ {{- column_spec -}} }
+\hline
+{{ header }} \\
+\hline
+{% for row in rows -%}
+{{ row }} \\
+{% endfor -%}
+\hline
+\end{tabular}
+\end{table}

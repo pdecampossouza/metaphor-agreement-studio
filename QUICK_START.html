@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Metaphor Agreement Studio 1.0 — Quick Start</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:920px;margin:40px auto;padding:0 24px;color:#182024;line-height:1.55;background:#f6f7f8}main{background:white;border:1px solid #d8dde1;border-radius:16px;padding:32px}h1{margin-top:0}h2{margin-top:2rem}.card{border:1px solid #d8dde1;border-radius:12px;padding:18px;margin:14px 0;background:#fbfcfc}code{background:#eef1f3;padding:2px 6px;border-radius:5px}.note{border-left:4px solid #c58b24;padding:10px 14px;background:#fff8e8}.ok{font-weight:650}ol{padding-left:1.4rem}small{color:#59636a}</style>
+</head>
+<body><main>
+<h1>Metaphor Agreement Studio 1.0</h1>
+<p>Inter-rater analysis for lexical metaphor annotation — local, researcher-controlled, and reproducible.</p>
+<div class="card"><h2>Windows</h2><ol><li>Extract the complete ZIP.</li><li>Double-click <code>START_METAPHOR_STUDIO_WINDOWS.bat</code>.</li><li>On the first run, allow a few minutes for the private environment to be prepared.</li><li>Use the browser application normally.</li><li>Double-click <code>STOP_METAPHOR_STUDIO_WINDOWS.bat</code> when finished.</li></ol><p>Optional: <code>CREATE_DESKTOP_SHORTCUT_WINDOWS.bat</code>.</p></div>
+<div class="card"><h2>macOS</h2><ol><li>Extract the complete ZIP.</li><li>Leave <strong>Metaphor Agreement Studio.app</strong> inside the extracted folder.</li><li>Double-click the app.</li><li>If macOS blocks the unsigned app on first launch, right-click it, choose <strong>Open</strong>, then confirm <strong>Open</strong>.</li><li>Use <code>STOP_METAPHOR_STUDIO_MAC.command</code> when finished.</li></ol></div>
+<div class="note"><strong>Research safeguard:</strong> the original workbook is never modified. Detection and inspection do not silently validate data. Multi-sheet workbooks require an explicit worksheet role, and synthetic/example sheets never enter research results.</div>
+<div class="card"><h2>Bráulio multi-sheet workbook</h2><p>When testing <code>Testes de concordancia - Braulio.xlsx</code>, assign a role to each worksheet before continuing:</p><ol><li><strong>Dois avaliadores</strong> → <strong>Study data</strong> for the real two-rater workflow.</li><li><strong>Mais de dois avaliadores</strong> → <strong>Synthetic / example data</strong>. Bráulio supplied these values only to test the multi-rater model.</li></ol><p class="ok">Synthetic/example worksheets are excluded from validated research statistics.</p><p>To test the 3+ rater model itself, you may temporarily reverse the two roles. Expected synthetic control values are Fleiss' Kappa ≈ 0.69125 and Cochran's Q = 135.0. They are not doctoral research findings.</p></div>
+
+<h2>Recommended first workflow</h2><ol><li>Open <strong>Overview</strong> and choose the detected workbook.</li><li>In <strong>Data Validation</strong>, first assign worksheet roles when more than one annotation worksheet is present; then review tables, raters, mappings, normalization proposals, and aggregate-source proposals.</li><li>Validate the dataset.</li><li>Explore <strong>Agreement</strong>, <strong>Disagreement Review</strong>, categories, sources, raters, and <strong>Statistical Analysis</strong>.</li><li>Choose No reference, Reference rater, or Expert benchmark as appropriate.</li><li>In <strong>Statistical Analysis</strong>, use <strong>Generate Comparison Report (PDF)</strong> to create a multi-page scientific comparison report for the active scope.</li><li>Save as a <strong>Research Project</strong> if the work should persist.</li><li>Use <strong>Figures</strong>, <strong>LaTeX & Reporting</strong>, and <strong>Export Center</strong> for research outputs.</li></ol>
+<h2>Verification</h2><p>Windows users can double-click <code>RUN_RELEASE_TESTS_WINDOWS.bat</code> after the first setup. See <code>TESTING_CHECKLIST.md</code> for the full acceptance checklist.</p>
+<small>Release 1.0.0 · local-only execution · no cloud account required</small>
+</main></body></html>

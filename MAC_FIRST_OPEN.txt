@@ -1,0 +1,15 @@
+METAPHOR AGREEMENT STUDIO 1.0.0 - macOS FIRST OPEN
+===================================================
+
+1. Extract the complete ZIP to a normal folder.
+2. Keep "Metaphor Agreement Studio.app" inside that extracted folder.
+3. Double-click the app.
+4. If macOS blocks it the first time:
+   - Control-click or right-click "Metaphor Agreement Studio.app"
+   - Choose Open
+   - Choose Open again in the confirmation dialog
+5. The first setup can take a few minutes and needs internet access.
+6. Use STOP_METAPHOR_STUDIO_MAC.command when finished.
+
+If Python is requested, install Python 3.12 from python.org and open the app again.
+The original workbook is never modified.

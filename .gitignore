@@ -1,0 +1,41 @@
+# Python and test caches
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Local Streamlit/runtime state
+.mas_streamlit.port
+.mas_logs/
+.streamlit/secrets.toml
+
+# Local research state
+local_projects/
+*.masproject.zip
+*.sqlite
+*.sqlite3
+*.db
+
+# User workbooks are private by default. The audited example below is public.
+imports/*.xlsx
+imports/*.xlsm
+imports/~$*
+!imports/Teste de Concordancia - Revisor Eduardo.xlsx
+
+# Generated exports and research packages
+Metaphor_Agreement_Research_Package.zip
+exports/
+artifacts/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Development worktrees
+.worktrees/

@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use Metaphor Agreement Studio in research, please cite this software."
+title: "Metaphor Agreement Studio"
+type: software
+authors:
+  - family-names: "Campos Souza"
+    given-names: "Paulo Vitor"
+    alias: "pdecampossouza"
+version: "1.0.0"
+date-released: 2026-09-11
+repository-code: "https://github.com/pdecampossouza/metaphor-agreement-studio"
+url: "https://github.com/pdecampossouza/metaphor-agreement-studio"
+license: MIT
+keywords:
+  - metaphor annotation
+  - inter-rater agreement
+  - MIPVU
+  - reproducible research
+  - research software
+  - linguistics
+  - Cohen's Kappa
+  - Fleiss' Kappa
+  - Cochran's Q

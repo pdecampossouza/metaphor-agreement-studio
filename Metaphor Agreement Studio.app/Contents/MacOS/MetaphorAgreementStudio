@@ -1,0 +1,10 @@
+#!/bin/bash
+set -u
+APP_CONTENTS="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$APP_CONTENTS/../../" && pwd)"
+LAUNCHER="$ROOT/START_METAPHOR_STUDIO_MAC.command"
+if [ ! -f "$LAUNCHER" ]; then
+  /usr/bin/osascript -e 'display dialog "Keep Metaphor Agreement Studio.app inside the extracted Metaphor Agreement Studio folder. The application launcher could not be found." buttons {"OK"} default button "OK" with title "Metaphor Agreement Studio"' >/dev/null 2>&1 || true
+  exit 1
+fi
+/bin/bash "$LAUNCHER" --background
