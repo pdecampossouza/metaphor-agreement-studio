@@ -157,3 +157,13 @@ Metaphor Agreement Studio is released under the [MIT License](LICENSE).
 ## Acknowledgment
 
 The software grew from a real lexical-metaphor annotation workflow and from methodological feedback provided by doctoral researchers and evaluators. Their use of the system motivated several safeguards around provenance, worksheet roles, rater selection, disagreement review, and reproducible reporting.
+
+## Contact
+
+**Paulo Vitor de Campos Souza**  
+Metaphor Agreement Studio — software and project contact  
+psouza@novaims.unl.pt
+
+**Bráulio Vidile**  
+Research and methodological contact  
+brauliovidile@gmail.com
