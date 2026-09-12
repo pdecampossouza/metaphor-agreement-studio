@@ -10,7 +10,8 @@ def test_app_opens_in_english_and_explains_detected_source(monkeypatch, tmp_path
     (tmp_path / "Teste de Concordancia - Revisor Eduardo.xlsx").write_bytes(b"candidate")
     monkeypatch.setenv("MAS_WORKSPACE", str(tmp_path))
 
-    at = AppTest.from_file("app.py").run()
+    app_path = Path(__file__).resolve().parents[2] / "app.py"
+    at = AppTest.from_file(str(app_path)).run()
 
     all_markdown = "\n".join(item.value for item in at.markdown)
     assert "Metaphor Agreement Studio" in all_markdown

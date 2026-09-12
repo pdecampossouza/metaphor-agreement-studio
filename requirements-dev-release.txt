@@ -1,4 +1,5 @@
 -r requirements-release.txt
 pytest>=8,<10
 pytest-cov>=6,<8
+pypdf>=5,<7
 ruff>=0.12,<1
