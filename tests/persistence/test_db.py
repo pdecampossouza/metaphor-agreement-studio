@@ -3,7 +3,12 @@ from pathlib import Path
 
 import pytest
 
-from metaphor_agreement_studio.persistence.db import initialize_database, open_database, transaction
+from metaphor_agreement_studio.persistence.db import (
+    initialize_database,
+    managed_database,
+    open_database,
+    transaction,
+)
 
 
 REQUIRED_TABLES = {
@@ -56,3 +61,14 @@ def test_transaction_rolls_back_on_exception(tmp_path: Path) -> None:
                 )
                 raise RuntimeError("boom")
         assert conn.execute("SELECT COUNT(*) FROM project").fetchone()[0] == 0
+
+
+def test_managed_database_closes_connection_after_context(tmp_path: Path) -> None:
+    db_path = tmp_path / "project.db"
+    initialize_database(db_path)
+
+    with managed_database(db_path) as conn:
+        assert conn.execute("SELECT 1").fetchone()[0] == 1
+
+    with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+        conn.execute("SELECT 1")

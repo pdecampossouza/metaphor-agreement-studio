@@ -17,11 +17,22 @@ def open_database(path: Path) -> sqlite3.Connection:
     return conn
 
 
+@contextmanager
+def managed_database(path: Path) -> Iterator[sqlite3.Connection]:
+    """Open a database connection that is always closed on context exit."""
+    conn = open_database(path)
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
+
+
 def initialize_database(path: Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     schema_path = Path(__file__).with_name("schema.sql")
-    with open_database(path) as conn:
+    with managed_database(path) as conn:
         version = conn.execute("PRAGMA user_version").fetchone()[0]
         if version not in (0, SCHEMA_VERSION):
             raise RuntimeError(

@@ -11,7 +11,7 @@ from metaphor_agreement_studio import __version__
 from metaphor_agreement_studio.domain.enums import Classification, SourceType, ValidationStatus
 from metaphor_agreement_studio.domain.imports import ValidatedDataset, ValidationDecision
 from metaphor_agreement_studio.domain.models import Annotation, LexicalUnit, Rater, Source
-from metaphor_agreement_studio.persistence.db import initialize_database, open_database, transaction
+from metaphor_agreement_studio.persistence.db import initialize_database, managed_database, transaction
 from metaphor_agreement_studio.persistence.repositories import (
     AnalysisVersionRepository,
     ArtifactRepository,
@@ -273,7 +273,7 @@ def create_project(root: Path, name: str, session_dataset: ValidatedDataset, sou
     project = ProjectRecord(project_id, name.strip() or "Untitled Study", now, now, __version__)
 
     stored_files = tuple(store_source_file(Path(path), root) for path in source_paths)
-    with open_database(db_path) as conn:
+    with managed_database(db_path) as conn:
         with transaction(conn):
             conn.execute(
                 "INSERT INTO project (project_id, name, created_at, updated_at, app_version) VALUES (?, ?, ?, ?, ?)",
@@ -341,7 +341,7 @@ def open_project(root: Path) -> ProjectContext:
     if not db_path.is_file() or not (root / "project.json").is_file():
         raise ValueError("The selected folder is not a Metaphor Agreement Studio project.")
     initialize_database(db_path)
-    with open_database(db_path) as conn:
+    with managed_database(db_path) as conn:
         project_row = conn.execute("SELECT * FROM project LIMIT 1").fetchone()
         if project_row is None:
             raise ValueError("Project metadata is missing from project.db.")
@@ -392,7 +392,7 @@ def save_dataset_version(
     all_files_by_hash.update({item.sha256: item for item in added_files})
     all_files = tuple(all_files_by_hash.values())
 
-    with open_database(context.root / "project.db") as conn:
+    with managed_database(context.root / "project.db") as conn:
         audit = AuditRepository(conn)
         with transaction(conn):
             for item in added_files:
@@ -435,7 +435,7 @@ def save_dataset_version(
 
 
 def record_analysis_version(context: ProjectContext, config) -> ProjectContext:
-    with open_database(context.root / "project.db") as conn:
+    with managed_database(context.root / "project.db") as conn:
         dataset_version = DatasetVersionRepository(conn).latest()
         if dataset_version is None:
             raise ValueError("A validated dataset version is required before recording analysis settings.")
@@ -486,7 +486,7 @@ def register_artifact(
         analysis_id=context.current_analysis_version.analysis_id if context.current_analysis_version else None,
         metadata=metadata or {},
     )
-    with open_database(context.root / "project.db") as conn:
+    with managed_database(context.root / "project.db") as conn:
         ArtifactRepository(conn).insert(record)
         AuditRepository(conn).add(
             _event(

@@ -3,11 +3,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 import shutil
-import sqlite3
 import stat
 import tempfile
 import zipfile
 
+from metaphor_agreement_studio.persistence.db import managed_database
 from metaphor_agreement_studio.persistence.project_service import open_project
 from metaphor_agreement_studio.persistence.types import ProjectContext
 
@@ -24,7 +24,7 @@ def _checkpoint_database(project_root: Path) -> None:
     db_path = project_root / "project.db"
     if not db_path.is_file():
         raise ValueError("project.db is missing from the selected project.")
-    with sqlite3.connect(db_path) as conn:
+    with managed_database(db_path) as conn:
         conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
 
 
