@@ -218,9 +218,11 @@ def render_sources() -> None:
     )
     row = next(item for item in all_rows if item["Source"] == selected_source)
     st.markdown(f"#### {selected_source}")
+    cohen_kappa = row["Cohen's κ"]
+    fleiss_kappa = row["Fleiss' κ"]
     st.caption(
-        f"N = {row['N']} · Observed agreement = {row['Raw agreement']} · Cohen's κ = {row["Cohen's κ"]} · "
-        f"Fleiss' κ = {row["Fleiss' κ"]} · Cochran's Q = {row['Cochran Q']} · p = {row['Q p-value']}"
+        f"N = {row['N']} · Observed agreement = {row['Raw agreement']} · Cohen's κ = {cohen_kappa} · "
+        f"Fleiss' κ = {fleiss_kappa} · Cochran's Q = {row['Cochran Q']} · p = {row['Q p-value']}"
     )
     if st.button("Open source in Annotations", icon=":material/table_view:", key="source_annotations"):
         st.session_state["annotations_source_filter"] = [selected_source]

@@ -236,9 +236,11 @@ def render_categories() -> None:
     )
     row = next(item for item in rows if item["Category"] == selected_category)
     st.markdown(f"#### {selected_category}")
+    cohen_kappa = row["Cohen's κ"]
+    fleiss_kappa = row["Fleiss' κ"]
     st.caption(
         f"N = {row['N']} lexical units · Observed agreement = {row['Raw agreement']} · "
-        f"Cohen's κ = {row["Cohen's κ"]} · Fleiss' κ = {row["Fleiss' κ"]}"
+        f"Cohen's κ = {cohen_kappa} · Fleiss' κ = {fleiss_kappa}"
     )
     if int(row["N"]) <= 1:
         st.info("Descriptive result only. This category contains one lexical unit, so inferential agreement statistics are not informative.")
