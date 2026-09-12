@@ -11,7 +11,8 @@ authors:
     given-names: "Bráulio"
     email: "brauliovidile@gmail.com"
 version: "1.0.0"
-date-released: 2026-09-11
+date-released: 2026-09-12
+doi: "10.5281/zenodo.22717819"
 repository-code: "https://github.com/pdecampossouza/metaphor-agreement-studio"
 url: "https://github.com/pdecampossouza/metaphor-agreement-studio"
 license: MIT

@@ -3,6 +3,7 @@
 [![Tests](https://github.com/pdecampossouza/metaphor-agreement-studio/actions/workflows/tests.yml/badge.svg)](https://github.com/pdecampossouza/metaphor-agreement-studio/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11-3.13](https://img.shields.io/badge/python-3.11--3.13-blue.svg)](pyproject.toml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22717819.svg)](https://doi.org/10.5281/zenodo.22717819)
 
 <p align="center">
   <img src="assets/readme/header_banner.svg" alt="Metaphor Agreement Studio banner" width="100%">
@@ -146,7 +147,11 @@ docs/                            methodology, architecture, and publication note
 
 ## Citation
 
-If you use Metaphor Agreement Studio in research, please cite the software using the metadata in [`CITATION.cff`](CITATION.cff). The project metadata lists both software authors and is designed to support a DOI-backed archived release through Zenodo as the public release history matures.
+If you use Metaphor Agreement Studio in research, please cite the archived software release:
+
+**Campos Souza, P. V., & Vidile, B. (2026). _Metaphor Agreement Studio_ (Version 1.0.0). Zenodo. https://doi.org/10.5281/zenodo.22717819**
+
+Machine-readable citation metadata are available in [`CITATION.cff`](CITATION.cff). The DOI above identifies the archived `v1.0.0` release.
 
 ## Open development and publication
 
