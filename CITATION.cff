@@ -6,6 +6,10 @@ authors:
   - family-names: "Campos Souza"
     given-names: "Paulo Vitor"
     alias: "pdecampossouza"
+    email: "psouza@novaims.unl.pt"
+  - family-names: "Vidile"
+    given-names: "Bráulio"
+    email: "brauliovidile@gmail.com"
 version: "1.0.0"
 date-released: 2026-09-11
 repository-code: "https://github.com/pdecampossouza/metaphor-agreement-studio"

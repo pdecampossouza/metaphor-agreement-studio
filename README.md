@@ -4,7 +4,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11-3.13](https://img.shields.io/badge/python-3.11--3.13-blue.svg)](pyproject.toml)
 
+<p align="center">
+  <img src="assets/readme/header_banner.svg" alt="Metaphor Agreement Studio banner" width="100%">
+</p>
+
 **A local-first research environment for reproducible inter-rater agreement analysis in lexical metaphor annotation.**
+
+> Music, video, books, and annotation data — organized into a reproducible metaphor-analysis workflow.
 
 Metaphor Agreement Studio helps researchers inspect annotation workbooks, validate how ratings are encoded, construct a canonical analytical dataset, explore agreement and disagreement, run appropriate inter-rater statistics, and export publication-ready figures and reports. The application is designed for researchers who may not be programmers and keeps methodological choices visible rather than silently converting spreadsheet conventions into data.
 
@@ -140,11 +146,21 @@ docs/                            methodology, architecture, and publication note
 
 ## Citation
 
-If you use Metaphor Agreement Studio in research, please cite the software using the metadata in [`CITATION.cff`](CITATION.cff). A DOI-backed archived release is planned through Zenodo as the public release history matures.
+If you use Metaphor Agreement Studio in research, please cite the software using the metadata in [`CITATION.cff`](CITATION.cff). The project metadata lists both software authors and is designed to support a DOI-backed archived release through Zenodo as the public release history matures.
 
 ## Open development and publication
 
 This repository is the public development home of the software. Development history, issues, releases, tests, and documentation are intentionally maintained in the open to support reproducibility and future research-software review. See [docs/PUBLICATION_ROADMAP.md](docs/PUBLICATION_ROADMAP.md).
+
+## Authors and contact
+
+**Paulo Vitor de Campos Souza**  
+Software architect and project contact  
+psouza@novaims.unl.pt
+
+**Bráulio Vidile**  
+Research-methodology co-author and domain contact  
+brauliovidile@gmail.com
 
 ## Contributing and support
 
@@ -157,13 +173,3 @@ Metaphor Agreement Studio is released under the [MIT License](LICENSE).
 ## Acknowledgment
 
 The software grew from a real lexical-metaphor annotation workflow and from methodological feedback provided by doctoral researchers and evaluators. Their use of the system motivated several safeguards around provenance, worksheet roles, rater selection, disagreement review, and reproducible reporting.
-
-## Contact
-
-**Paulo Vitor de Campos Souza**  
-Metaphor Agreement Studio — software and project contact  
-psouza@novaims.unl.pt
-
-**Bráulio Vidile**  
-Research and methodological contact  
-brauliovidile@gmail.com
