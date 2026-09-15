@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from metaphor_agreement_studio.domain.imports import ValidatedDataset
 from metaphor_agreement_studio.statistics.types import AnalysisConfig, GroupResult
 from metaphor_agreement_studio.ui.components import page_header
+from metaphor_agreement_studio.ui.filters import render_analysis_filters
 
 
 def split_source_groups(
@@ -32,12 +33,18 @@ def _format_p(value: float | None) -> str:
     return "< .001" if value < 0.001 else f"{value:.3f}"
 
 
+def _pair_label(dataset: ValidatedDataset, pair_ids: tuple[str, str]) -> str:
+    names = {rater.rater_id: rater.display_name for rater in dataset.raters}
+    return f"{names.get(pair_ids[0], pair_ids[0])} × {names.get(pair_ids[1], pair_ids[1])}"
+
+
 def source_overview_records(
     groups: tuple[GroupResult, ...],
     dataset: ValidatedDataset,
     pair_ids: tuple[str, str],
 ) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
+    pair_label = _pair_label(dataset, pair_ids)
     for group in groups:
         pair = _pair_for_group(group, pair_ids)
         if pair is None:
@@ -54,7 +61,7 @@ def source_overview_records(
             {
                 "Source": group.display_name,
                 "N": group.lexical_unit_count,
-                "Raw agreement": "—" if pair.raw_agreement.value is None else f"{pair.raw_agreement.value * 100:.1f}%",
+                "Pairwise observed agreement": "—" if pair.raw_agreement.value is None else f"{pair.raw_agreement.value * 100:.1f}%",
                 "Cohen's κ": "Not estimable" if pair.kappa.value is None else f"{pair.kappa.value:.3f}",
                 "Fleiss' κ": fleiss_display,
                 "Cochran Q": "—" if q is None or q.q is None else f"{q.q:.3f}",
@@ -63,6 +70,7 @@ def source_overview_records(
                 "_kappa_value": pair.kappa.value,
                 "_fleiss_value": fleiss_value,
                 "_source_id": group.group_id,
+                "_pair_label": pair_label,
             }
         )
     return rows
@@ -78,12 +86,16 @@ def build_source_agreement_figure(rows: list[dict[str, object]]) -> go.Figure:
             marker_color="#315E8A",
             text=["—" if value is None else f"{value:.1f}%" for value in values],
             textposition="outside",
-            hovertemplate="%{x}<br>Observed agreement: %{y:.1f}%<extra></extra>",
+            hovertemplate="%{x}<br>Pairwise observed agreement: %{y:.1f}%<extra></extra>",
         )
     )
+    pair_label = rows[0].get("_pair_label") if rows else None
+    title = "Pairwise observed agreement by source"
+    if pair_label:
+        title = f"{title} — {pair_label}"
     figure.update_layout(
-        title="Observed agreement by source",
-        yaxis_title="Observed agreement (%)",
+        title=title,
+        yaxis_title="Pairwise observed agreement (%)",
         yaxis_range=[0, 105],
         xaxis_title=None,
         height=390,
@@ -169,10 +181,20 @@ def render_sources() -> None:
         st.info("Complete Data Validation first.", icon=":material/lock:")
         return
 
-    bundle = analyze_dataset_cached(dataset, AnalysisConfig())
+    selection = render_analysis_filters(dataset, "source")
+    if len(selection.rater_ids) < 2 or not selection.source_ids or not selection.categories:
+        st.info("Select at least two raters, one source and one grammatical category to compare source groups.")
+        return
+
+    config = AnalysisConfig(
+        selected_source_ids=selection.source_ids,
+        selected_categories=selection.categories,
+        selected_rater_ids=selection.rater_ids,
+    )
+    bundle = analyze_dataset_cached(dataset, config)
     primary, aggregate = split_source_groups(bundle.by_source, dataset)
     if not bundle.pairwise:
-        st.info("At least two raters are required for source agreement comparisons.")
+        st.info("At least two selected raters are required for source agreement comparisons.")
         return
     rater_names = {rater.rater_id: rater.display_name for rater in dataset.raters}
     pair_options = {
@@ -190,11 +212,11 @@ def render_sources() -> None:
     with chart_left:
         st.plotly_chart(build_source_agreement_figure(primary_rows), use_container_width=True, config={"displayModeBar": False})
     with chart_right:
-        if len(dataset.raters) >= 3:
+        if len(selection.rater_ids) >= 3:
             st.plotly_chart(build_source_fleiss_figure(primary_rows), use_container_width=True, config={"displayModeBar": False})
         else:
             st.plotly_chart(build_source_kappa_figure(primary_rows), use_container_width=True, config={"displayModeBar": False})
-    if len(dataset.raters) >= 3:
+    if len(selection.rater_ids) >= 3:
         st.caption("Fleiss' κ is the global agreement coefficient within each source for three or more raters. Pairwise Cohen's κ remains available below.")
         st.plotly_chart(build_source_kappa_figure(primary_rows), use_container_width=True, config={"displayModeBar": False})
 
@@ -221,10 +243,16 @@ def render_sources() -> None:
     cohen_kappa = row["Cohen's κ"]
     fleiss_kappa = row["Fleiss' κ"]
     st.caption(
-        f"N = {row['N']} · Observed agreement = {row['Raw agreement']} · Cohen's κ = {cohen_kappa} · "
+        f"N = {row['N']} · Pairwise observed agreement ({row['_pair_label']}) = "
+        f"{row['Pairwise observed agreement']} · Cohen's κ = {cohen_kappa} · "
         f"Fleiss' κ = {fleiss_kappa} · Cochran's Q = {row['Cochran Q']} · p = {row['Q p-value']}"
     )
     if st.button("Open source in Annotations", icon=":material/table_view:", key="source_annotations"):
+        rater_names = {rater.rater_id: rater.display_name for rater in dataset.raters}
         st.session_state["annotations_source_filter"] = [selected_source]
+        st.session_state["annotations_category_filter"] = list(selection.categories)
+        st.session_state["annotations_rater_filter"] = [
+            rater_names[rater_id] for rater_id in selection.rater_ids
+        ]
         set_route(Route.ANNOTATIONS)
         st.rerun()

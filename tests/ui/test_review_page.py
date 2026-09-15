@@ -111,3 +111,52 @@ def test_review_default_sources_exclude_aggregate_views() -> None:
     )
 
     assert default_review_source_ids(dataset) == ("s1",)
+
+
+def test_review_selected_unit_ids_respect_shared_analysis_selection() -> None:
+    from metaphor_agreement_studio.ui.filters import AnalysisSelection
+    from metaphor_agreement_studio.ui.pages import review as review_page
+
+    dataset = _dataset()
+    selection = AnalysisSelection(
+        source_ids=("s1",),
+        categories=("Verb",),
+        rater_ids=("r1", "r3"),
+    )
+
+    assert hasattr(review_page, "selected_review_unit_ids")
+    assert review_page.selected_review_unit_ids(dataset, selection) == ("u3",)
+
+
+def test_review_status_recalculates_for_selected_rater_subset() -> None:
+    from metaphor_agreement_studio.ui.filters import AnalysisSelection
+    from metaphor_agreement_studio.ui.pages import review as review_page
+
+    dataset = _dataset()
+    assert hasattr(review_page, "selected_review_unit_ids")
+
+    divergent_selection = AnalysisSelection(
+        source_ids=("s1",),
+        categories=("Verb",),
+        rater_ids=("r1", "r3"),
+    )
+    unit_ids = review_page.selected_review_unit_ids(dataset, divergent_selection)
+    divergent = build_review_cases(
+        dataset,
+        selected_raters=divergent_selection.rater_ids,
+        unit_ids=unit_ids,
+    )
+
+    unanimous_selection = AnalysisSelection(
+        source_ids=("s1",),
+        categories=("Verb",),
+        rater_ids=("r1", "r2"),
+    )
+    unanimous = build_review_cases(
+        dataset,
+        selected_raters=unanimous_selection.rater_ids,
+        unit_ids=review_page.selected_review_unit_ids(dataset, unanimous_selection),
+    )
+
+    assert divergent[0].status is ReviewStatus.DISAGREEMENT
+    assert unanimous[0].status is ReviewStatus.UNANIMOUS_METAPHOR

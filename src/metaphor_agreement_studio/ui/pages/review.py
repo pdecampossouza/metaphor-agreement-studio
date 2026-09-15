@@ -9,7 +9,11 @@ from metaphor_agreement_studio.domain.imports import ValidatedDataset
 from metaphor_agreement_studio.review.service import build_review_cases
 from metaphor_agreement_studio.review.types import ReviewCase, ReviewStatus
 from metaphor_agreement_studio.ui.components import page_header
-from metaphor_agreement_studio.ui.filters import default_reference_rater_id
+from metaphor_agreement_studio.ui.filters import (
+    AnalysisSelection,
+    default_reference_rater_id,
+    render_analysis_filters,
+)
 from metaphor_agreement_studio.ui.legends import render_annotation_legend
 
 
@@ -24,6 +28,20 @@ REVIEW_HELP_TEXT = (
 
 def default_review_source_ids(dataset: ValidatedDataset) -> tuple[str, ...]:
     return tuple(source.source_id for source in dataset.sources if not source.is_aggregate)
+
+
+def selected_review_unit_ids(
+    dataset: ValidatedDataset,
+    selection: AnalysisSelection,
+) -> tuple[str, ...]:
+    source_ids = set(selection.source_ids)
+    categories = set(selection.categories)
+    return tuple(
+        unit.unit_id
+        for unit in dataset.units
+        if unit.source_id in source_ids and unit.grammatical_category in categories
+    )
+
 
 def review_summary(cases: tuple[ReviewCase, ...]) -> dict[str, int]:
     disagreements = sum(case.status is ReviewStatus.DISAGREEMENT for case in cases)
@@ -166,10 +184,18 @@ def render_review() -> None:
         st.info("Complete Data Validation first.", icon=":material/lock:")
         return
 
-    cases = build_review_cases(dataset)
-    primary_source_ids = default_review_source_ids(dataset)
-    primary_cases = filter_review_cases(cases, mode="All cases", source_ids=primary_source_ids)
-    summary = review_summary(primary_cases)
+    selection = render_analysis_filters(dataset, "review")
+    if len(selection.rater_ids) < 2 or not selection.source_ids or not selection.categories:
+        st.info("Select at least two raters, one source and one grammatical category to review disagreements.")
+        return
+
+    unit_ids = selected_review_unit_ids(dataset, selection)
+    cases = build_review_cases(
+        dataset,
+        selected_raters=selection.rater_ids,
+        unit_ids=unit_ids,
+    )
+    summary = review_summary(cases)
     metric_cols = st.columns(4)
     metric_cols[0].metric("Cases require review", summary["requires_review"])
     metric_cols[1].metric("Unanimous cases", summary["unanimous"])
@@ -192,7 +218,7 @@ def render_review() -> None:
             key="review_case_type",
         )
         rater_names = {rater.rater_id: rater.display_name for rater in dataset.raters}
-        rater_ids = tuple(rater_names)
+        rater_ids = selection.rater_ids
         preferred = default_reference_rater_id(dataset)
         focus_index = rater_ids.index(preferred) if preferred in rater_ids else 0
         focus_rater_id = st.selectbox(
@@ -202,32 +228,10 @@ def render_review() -> None:
             format_func=lambda rater_id: rater_names[rater_id],
             key="review_focus_rater",
         )
-        source_names = {source.source_id: source.display_name for source in dataset.sources}
-        source_ids = tuple(source_names)
-        selected_sources = tuple(
-            st.multiselect(
-                "Sources",
-                source_ids,
-                default=primary_source_ids,
-                format_func=lambda source_id: source_names[source_id],
-                key="review_sources",
-            )
-        )
-        categories = tuple(sorted({unit.grammatical_category for unit in dataset.units}))
-        selected_categories = tuple(
-            st.multiselect(
-                "Grammatical categories",
-                categories,
-                default=categories,
-                key="review_categories",
-            )
-        )
         selected_cases = filter_review_cases(
             cases,
             mode=mode,
             focus_rater_id=focus_rater_id,
-            source_ids=selected_sources,
-            categories=selected_categories,
         )
         st.caption(f"{len(selected_cases)} cases in this view.")
         if mode == "Focus rater differs":

@@ -7,6 +7,7 @@ from metaphor_agreement_studio.domain.enums import Classification
 from metaphor_agreement_studio.domain.imports import ValidatedDataset
 from metaphor_agreement_studio.statistics.types import AnalysisConfig, GroupResult
 from metaphor_agreement_studio.ui.components import page_header
+from metaphor_agreement_studio.ui.filters import AnalysisSelection, render_analysis_filters
 
 
 def _pair_for_group(group: GroupResult, pair_ids: tuple[str, str]):
@@ -23,12 +24,18 @@ def _format_p(value: float | None) -> str:
     return "< .001" if value < 0.001 else f"{value:.3f}"
 
 
+def _pair_label(dataset: ValidatedDataset, pair_ids: tuple[str, str]) -> str:
+    names = {rater.rater_id: rater.display_name for rater in dataset.raters}
+    return f"{names.get(pair_ids[0], pair_ids[0])} × {names.get(pair_ids[1], pair_ids[1])}"
+
+
 def category_overview_records(
     groups: tuple[GroupResult, ...],
     dataset: ValidatedDataset,
     pair_ids: tuple[str, str],
 ) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
+    pair_label = _pair_label(dataset, pair_ids)
     for group in groups:
         pair = _pair_for_group(group, pair_ids)
         if pair is None:
@@ -54,7 +61,7 @@ def category_overview_records(
             {
                 "Category": group.display_name,
                 "N": group.lexical_unit_count,
-                "Raw agreement": "—" if raw_value is None else f"{raw_value * 100:.1f}%",
+                "Pairwise observed agreement": "—" if raw_value is None else f"{raw_value * 100:.1f}%",
                 "Cohen's κ": kappa_display,
                 "Fleiss' κ": fleiss_display,
                 "Cochran Q": "—" if q is None or q.q is None else f"{q.q:.3f}",
@@ -62,6 +69,7 @@ def category_overview_records(
                 "_raw_value": raw_value,
                 "_kappa_value": kappa_value,
                 "_fleiss_value": fleiss_value,
+                "_pair_label": pair_label,
             }
         )
     return rows
@@ -78,12 +86,16 @@ def build_category_agreement_figure(rows: list[dict[str, object]]) -> go.Figure:
             marker_color="#315E8A",
             text=["—" if value is None else f"{value:.1f}%" for value in values],
             textposition="outside",
-            hovertemplate="%{y}<br>Observed agreement: %{x:.1f}%<extra></extra>",
+            hovertemplate="%{y}<br>Pairwise observed agreement: %{x:.1f}%<extra></extra>",
         )
     )
+    pair_label = rows[0].get("_pair_label") if rows else None
+    title = "Pairwise observed agreement by grammatical category"
+    if pair_label:
+        title = f"{title} — {pair_label}"
     figure.update_layout(
-        title="Observed agreement by grammatical category",
-        xaxis_title="Observed agreement (%)",
+        title=title,
+        xaxis_title="Pairwise observed agreement (%)",
         xaxis_range=[0, 105],
         yaxis=dict(autorange="reversed"),
         height=max(360, 90 + 42 * max(1, len(rows))),
@@ -152,15 +164,22 @@ def build_category_fleiss_figure(rows: list[dict[str, object]]) -> go.Figure:
     return figure
 
 
-def _rater_counts_for_category(dataset: ValidatedDataset, category: str) -> pd.DataFrame:
-    primary_sources = {source.source_id for source in dataset.sources if not source.is_aggregate}
+def rater_counts_for_category(
+    dataset: ValidatedDataset,
+    category: str,
+    selection: AnalysisSelection,
+) -> pd.DataFrame:
+    source_ids = set(selection.source_ids)
+    selected_raters = set(selection.rater_ids)
     unit_ids = {
         unit.unit_id
         for unit in dataset.units
-        if unit.source_id in primary_sources and unit.grammatical_category == category
+        if unit.source_id in source_ids and unit.grammatical_category == category
     }
     rows = []
     for rater in dataset.raters:
+        if rater.rater_id not in selected_raters:
+            continue
         values = [
             annotation.classification
             for annotation in dataset.annotations
@@ -197,7 +216,17 @@ def render_categories() -> None:
         st.info("Complete Data Validation first.", icon=":material/lock:")
         return
 
-    bundle = analyze_dataset_cached(dataset, AnalysisConfig())
+    selection = render_analysis_filters(dataset, "category")
+    if len(selection.rater_ids) < 2 or not selection.source_ids or not selection.categories:
+        st.info("Select at least two raters, one source and one grammatical category to compare categories.")
+        return
+
+    config = AnalysisConfig(
+        selected_source_ids=selection.source_ids,
+        selected_categories=selection.categories,
+        selected_rater_ids=selection.rater_ids,
+    )
+    bundle = analyze_dataset_cached(dataset, config)
     pair_options = {
         f"{next(r.display_name for r in dataset.raters if r.rater_id == pair.rater_a_id)} × "
         f"{next(r.display_name for r in dataset.raters if r.rater_id == pair.rater_b_id)}": (
@@ -212,16 +241,19 @@ def render_categories() -> None:
     selected_pair_label = st.selectbox("Rater pair", tuple(pair_options), key="category_pair")
     pair_ids = pair_options[selected_pair_label]
     rows = category_overview_records(bundle.by_category, dataset, pair_ids)
+    if not rows:
+        st.info("No lexical units match the selected analysis filters.")
+        return
 
     left, right = st.columns(2, gap="large")
     with left:
         st.plotly_chart(build_category_agreement_figure(rows), use_container_width=True, config={"displayModeBar": False})
     with right:
-        if len(dataset.raters) >= 3:
+        if len(selection.rater_ids) >= 3:
             st.plotly_chart(build_category_fleiss_figure(rows), use_container_width=True, config={"displayModeBar": False})
         else:
             st.plotly_chart(build_category_kappa_figure(rows), use_container_width=True, config={"displayModeBar": False})
-    if len(dataset.raters) >= 3:
+    if len(selection.rater_ids) >= 3:
         st.caption("Fleiss' κ is the global agreement coefficient within each category for three or more raters. Pairwise Cohen's κ remains available below.")
         st.plotly_chart(build_category_kappa_figure(rows), use_container_width=True, config={"displayModeBar": False})
 
@@ -239,14 +271,27 @@ def render_categories() -> None:
     cohen_kappa = row["Cohen's κ"]
     fleiss_kappa = row["Fleiss' κ"]
     st.caption(
-        f"N = {row['N']} lexical units · Observed agreement = {row['Raw agreement']} · "
+        f"N = {row['N']} lexical units · Pairwise observed agreement ({row['_pair_label']}) = "
+        f"{row['Pairwise observed agreement']} · "
         f"Cohen's κ = {cohen_kappa} · Fleiss' κ = {fleiss_kappa}"
     )
     if int(row["N"]) <= 1:
         st.info("Descriptive result only. This category contains one lexical unit, so inferential agreement statistics are not informative.")
-    st.dataframe(_rater_counts_for_category(dataset, selected_category), use_container_width=True, hide_index=True)
+    st.dataframe(
+        rater_counts_for_category(dataset, selected_category, selection),
+        use_container_width=True,
+        hide_index=True,
+    )
     st.caption(f"Cochran's Q: {row['Cochran Q']} · p-value: {row['Q p-value']}")
     if st.button("Open category in Annotations", icon=":material/table_view:", key="category_annotations"):
+        source_names = {source.source_id: source.display_name for source in dataset.sources}
+        rater_names = {rater.rater_id: rater.display_name for rater in dataset.raters}
+        st.session_state["annotations_source_filter"] = [
+            source_names[source_id] for source_id in selection.source_ids
+        ]
         st.session_state["annotations_category_filter"] = [selected_category]
+        st.session_state["annotations_rater_filter"] = [
+            rater_names[rater_id] for rater_id in selection.rater_ids
+        ]
         set_route(Route.ANNOTATIONS)
         st.rerun()

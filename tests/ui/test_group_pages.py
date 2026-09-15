@@ -77,7 +77,7 @@ def test_category_rows_keep_n_adjacent_and_singleton_is_descriptive() -> None:
     adverb = next(row for row in rows if row["Category"] == "Adverb")
     assert adverb["N"] == 1
     assert adverb["Cohen's κ"] == "Descriptive result only"
-    assert "Raw agreement" in adverb
+    assert "Pairwise observed agreement" in adverb
 
 
 def test_category_kappa_plot_keeps_sample_size_in_axis_labels() -> None:
@@ -110,7 +110,7 @@ def test_source_overview_and_plot_include_n_without_double_counting_aggregate() 
     figure = build_source_agreement_figure(rows)
 
     assert sum(int(row["N"]) for row in rows) == 4
-    assert "Observed agreement by source" in figure.layout.title.text
+    assert "Pairwise observed agreement by source" in figure.layout.title.text
     assert all("n=" in str(label) for label in figure.data[0].x)
 
 
@@ -173,3 +173,105 @@ def test_multirater_source_rows_and_figure_show_fleiss_kappa() -> None:
     assert any(row["_fleiss_value"] is not None for row in rows)
     figure = build_source_fleiss_figure(rows)
     assert "Fleiss' κ by source" in figure.layout.title.text
+
+
+def test_category_pairwise_agreement_is_labeled_with_selected_pair() -> None:
+    dataset = _multirater_dataset()
+    bundle = analyze_dataset(dataset, AnalysisConfig(bootstrap_samples=0))
+
+    rows = category_overview_records(bundle.by_category, dataset, ("r1", "r2"))
+    figure = __import__(
+        "metaphor_agreement_studio.ui.pages.categories",
+        fromlist=["build_category_agreement_figure"],
+    ).build_category_agreement_figure(rows)
+
+    noun = next(row for row in rows if row["Category"] == "Noun")
+    assert "Pairwise observed agreement" in noun
+    assert noun["Pairwise observed agreement"] == "100.0%"
+    assert noun["_pair_label"] == "Eduardo × Braulio"
+    assert "Pairwise observed agreement" in figure.layout.title.text
+    assert "Eduardo × Braulio" in figure.layout.title.text
+    assert "Pairwise observed agreement" in figure.layout.xaxis.title.text
+
+
+def test_category_rater_counts_respect_selected_sources_and_raters() -> None:
+    from metaphor_agreement_studio.ui.filters import AnalysisSelection
+    from metaphor_agreement_studio.ui.pages import categories as categories_page
+
+    dataset = _multirater_dataset()
+    selection = AnalysisSelection(
+        source_ids=("s1",),
+        categories=("Noun",),
+        rater_ids=("r1", "r3"),
+    )
+
+    assert hasattr(categories_page, "rater_counts_for_category")
+    frame = categories_page.rater_counts_for_category(dataset, "Noun", selection)
+
+    assert frame["Rater"].tolist() == ["Eduardo", "Sofia"]
+    assert frame[["Metaphor", "Non-metaphor", "Missing"]].to_dict("records") == [
+        {"Metaphor": 1, "Non-metaphor": 1, "Missing": 0},
+        {"Metaphor": 2, "Non-metaphor": 0, "Missing": 0},
+    ]
+
+
+def test_analysis_selection_limits_group_dimensions_and_rater_pairs() -> None:
+    from metaphor_agreement_studio.ui.filters import AnalysisSelection
+
+    dataset = _multirater_dataset()
+    selection = AnalysisSelection(
+        source_ids=("s1",),
+        categories=("Noun",),
+        rater_ids=("r1", "r3"),
+    )
+    bundle = analyze_dataset(
+        dataset,
+        AnalysisConfig(
+            selected_source_ids=selection.source_ids,
+            selected_categories=selection.categories,
+            selected_rater_ids=selection.rater_ids,
+            bootstrap_samples=0,
+        ),
+    )
+
+    assert [group.display_name for group in bundle.by_category] == ["Noun"]
+    assert [group.display_name for group in bundle.by_source] == ["Song A"]
+    assert {(pair.rater_a_id, pair.rater_b_id) for pair in bundle.pairwise} == {("r1", "r3")}
+
+
+def test_source_pairwise_agreement_is_labeled_with_selected_pair() -> None:
+    dataset = _multirater_dataset()
+    bundle = analyze_dataset(dataset, AnalysisConfig(bootstrap_samples=0))
+    primary, _ = split_source_groups(bundle.by_source, dataset)
+
+    rows = source_overview_records(primary, dataset, ("r1", "r2"))
+    figure = build_source_agreement_figure(rows)
+
+    assert all("Pairwise observed agreement" in row for row in rows)
+    assert all(row["_pair_label"] == "Eduardo × Braulio" for row in rows)
+    assert "Pairwise observed agreement" in figure.layout.title.text
+    assert "Eduardo × Braulio" in figure.layout.title.text
+    assert "Pairwise observed agreement" in figure.layout.yaxis.title.text
+
+
+def test_pair_can_have_full_agreement_while_multirater_category_contains_disagreement() -> None:
+    from metaphor_agreement_studio.review.service import build_review_cases
+    from metaphor_agreement_studio.review.types import ReviewStatus
+
+    dataset = _multirater_dataset()
+    bundle = analyze_dataset(dataset, AnalysisConfig(bootstrap_samples=0))
+    noun_group = next(group for group in bundle.by_category if group.display_name == "Noun")
+    pair = next(
+        pair
+        for pair in noun_group.pairwise
+        if {pair.rater_a_id, pair.rater_b_id} == {"r1", "r2"}
+    )
+    noun_unit_ids = tuple(
+        unit.unit_id for unit in dataset.units
+        if not next(source for source in dataset.sources if source.source_id == unit.source_id).is_aggregate
+        and unit.grammatical_category == "Noun"
+    )
+    cases = build_review_cases(dataset, unit_ids=noun_unit_ids)
+
+    assert pair.raw_agreement.value == 1.0
+    assert any(case.status is ReviewStatus.DISAGREEMENT for case in cases)
